@@ -8,6 +8,7 @@ import { magicLink } from "@/actions/magic-link";
 import { ErrorMessage } from "@/components/error-message";
 import { loginSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
 const SignInPage = () => {
   const {
@@ -23,7 +24,7 @@ const SignInPage = () => {
     formData.append("email", data.email);
 
     try {
-      await magicLink(formData);
+      await magicLink(formData).then(() => redirect("/"));
     } catch (error) {
       console.error(error);
     }
