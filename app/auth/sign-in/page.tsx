@@ -1,25 +1,61 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
 import { magicLink } from "@/actions/magic-link";
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { ErrorMessage } from "@/components/error-message";
+import { loginSchema } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 
-const SignInPage = async () => {
-  const session = await auth();
+const SignInPage = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  if (session) redirect("/");
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
+    const formData = new FormData();
+    formData.append("email", data.email);
+
+    try {
+      await magicLink(formData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto w-full px-4">
       <form
-        action={magicLink}
+        onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col items-center justify-center gap-y-4 w-full"
       >
-        <input
-          placeholder="email@email.com"
-          className="w-full p-2 rounded border"
-          type="email"
-          name="email"
-        />
-        <button className="w-full bg-slate-200 p-2 rounded">
+        <div className="w-full">
+          <label className="text-sm font-semibold">Email</label>
+          <input
+            placeholder="email@email.com"
+            className={cn(
+              "w-full p-2 rounded border",
+              isSubmitting && "opacity-50 cursor-not-allowed"
+            )}
+            {...register("email")}
+            disabled={isSubmitting}
+          />
+        </div>
+        <ErrorMessage message={errors.email?.message} />
+        <button
+          className={cn(
+            "w-full bg-slate-200 p-2 rounded",
+            isSubmitting && "opacity-50 cursor-not-allowed"
+          )}
+          type="submit"
+          disabled={isSubmitting}
+        >
           Send Magic Link
         </button>
       </form>
